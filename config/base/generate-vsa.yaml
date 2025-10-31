@@ -61,13 +61,21 @@ spec:
     - name: VSA_SIGNING_KEY_SECRET_NAME
       type: string
       description: Namespace and secret name for VSA signing key in format namespace/secret-name
+
+  results:
+    - name: TEST_OUTPUT
+      type: string
+    - name: SNAPSHOT_IMAGES
+      type: string
+
   stepTemplate:
     env:
       - name: HOME
         value: "/tekton/home"
   steps:
     - name: generate-vsa
-      image: quay.io/conforma/cli:latest
+      #image: quay.io/conforma/cli:latest
+      image: quay.io/sbaird/cli:latest-linux-amd64@sha256:a867eae61f5910f47af7033f33ff8935203b09d563d7fe516eceb1abeb0e0669
       onError: continue  # Don't fail on policy violations
       command: [ec]
       args:
@@ -85,6 +93,8 @@ spec:
         - "--workers"
         - "$(params.WORKERS)"
         - "--output"
+        - "appstudio=$(results.TEST_OUTPUT.path)"
+        - "--output"
         - "text"
         - "--vsa"
         - "--vsa-signing-key"
@@ -99,3 +109,21 @@ spec:
           memory: 1Gi
         limits:
           memory: 1Gi
+
+    - name: trigger-chains-provenance
+      image: quay.io/conforma/cli:latest
+      script: |
+        #!/bin/bash
+        # The goal here is to make Chains create an attestation for this pipelinerun associated with
+        # the images in the snapshot. Todo: Don't include images unless a fresh VSA was created
+        echo '$(params.IMAGES)' | jq -r '.components[].containerImage' | tee '$(results.SNAPSHOT_IMAGES.path)'
+
+    - name: show-task-results
+      # For debugging purposes, we don't need it otherwise.
+      image: quay.io/conforma/cli:latest
+      script: |
+        #!/bin/bash
+        echo "TEST_OUTPUT:"
+        jq . "$(results.TEST_OUTPUT.path)"
+        echo "SNAPSHOT_IMAGES:"
+        cat "$(results.SNAPSHOT_IMAGES.path)"
