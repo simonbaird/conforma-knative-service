@@ -691,6 +691,7 @@ func (s *Service) createTaskRun(snapshot *konflux.Snapshot, config *TaskRunConfi
 		{Name: "IMAGES", Value: tektonv1.ParamValue{Type: tektonv1.ParamTypeString, StringVal: string(specJSON)}},
 		{Name: "POLICY_CONFIGURATION", Value: createParamValue(ecp)},
 		{Name: "PUBLIC_KEY", Value: createParamValue(config.PublicKey)},
+		{Name: "VSA_SIGNING_KEY_SECRET_NAME", Value: tektonv1.ParamValue{Type: tektonv1.ParamTypeString, StringVal: fmt.Sprintf("%s/%s", taskNamespace, config.VsaSigningKeySecretName)}},
 		{Name: "VSA_UPLOAD_URL", Value: tektonv1.ParamValue{Type: tektonv1.ParamTypeString, StringVal: config.VsaUploadUrl}},
 		{Name: "IGNORE_REKOR", Value: createParamValue(config.IgnoreRekor)},
 		{Name: "STRICT", Value: createParamValue(config.Strict)},
@@ -728,14 +729,6 @@ func (s *Service) createTaskRun(snapshot *konflux.Snapshot, config *TaskRunConfi
 			},
 			Params:             params,
 			ServiceAccountName: "conforma-vsa-generator",
-			Workspaces: []tektonv1.WorkspaceBinding{
-				{
-					Name: "signing-key",
-					Secret: &corev1.SecretVolumeSource{
-						SecretName: config.VsaSigningKeySecretName,
-					},
-				},
-			},
 		},
 	}, nil
 }

@@ -58,9 +58,9 @@ spec:
       type: string
       description: Number of parallel workers to use for policy evaluation
       default: "1"
-  workspaces:
-    - name: signing-key
-      description: Workspace containing the VSA signing key secret
+    - name: VSA_SIGNING_KEY_SECRET_NAME
+      type: string
+      description: Namespace and secret name for VSA signing key in format namespace/secret-name
   stepTemplate:
     env:
       - name: HOME
@@ -88,7 +88,7 @@ spec:
         - "text"
         - "--vsa"
         - "--vsa-signing-key"
-        - "$(workspaces.signing-key.path)/cosign.key"
+        - "k8s://$(params.VSA_SIGNING_KEY_SECRET_NAME)"
         - "--vsa-upload"
         - "$(params.VSA_UPLOAD_URL)"
         - "--show-successes"
