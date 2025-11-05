@@ -67,6 +67,8 @@ spec:
       type: string
     - name: SNAPSHOT_IMAGES
       type: string
+    - name: VSA_MAP
+      type: string
 
   stepTemplate:
     env:
@@ -75,7 +77,7 @@ spec:
   steps:
     - name: generate-vsa
       #image: quay.io/conforma/cli:latest
-      image: quay.io/sbaird/cli:latest-linux-amd64@sha256:a867eae61f5910f47af7033f33ff8935203b09d563d7fe516eceb1abeb0e0669
+      image: quay.io/sbaird/cli:latest-linux-amd64@sha256:e2d5fff783c0cd8354bcf6942cca03575f1ed6b47363c062972472646bf09d52
       onError: continue  # Don't fail on policy violations
       command: [ec]
       args:
@@ -94,6 +96,8 @@ spec:
         - "$(params.WORKERS)"
         - "--output"
         - "appstudio=$(results.TEST_OUTPUT.path)"
+        - "--output"
+        - "vsa-map=$(results.VSA_MAP.path)"
         - "--output"
         - "text"
         - "--vsa"
@@ -116,6 +120,7 @@ spec:
         #!/bin/bash
         # The goal here is to make Chains create an attestation for this pipelinerun associated with
         # the images in the snapshot. Todo: Don't include images unless a fresh VSA was created
+        echo "This will become the IMAGES pipeline result, which will result in Chains producing a SLSA attestation"
         echo '$(params.IMAGES)' | jq -r '.components[].containerImage' | tee '$(results.SNAPSHOT_IMAGES.path)'
 
     - name: show-task-results
@@ -127,3 +132,5 @@ spec:
         jq . "$(results.TEST_OUTPUT.path)"
         echo "SNAPSHOT_IMAGES:"
         cat "$(results.SNAPSHOT_IMAGES.path)"
+        echo "VSA_MAP:"
+        jq . "$(results.VSA_MAP.path)"
