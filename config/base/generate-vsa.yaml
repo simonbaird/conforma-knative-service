@@ -92,6 +92,7 @@ spec:
         - "--vsa-upload"
         - "$(params.VSA_UPLOAD_URL)"
         - "--show-successes"
+        - "--info"
       computeResources:
         requests:
           cpu: 1000m
